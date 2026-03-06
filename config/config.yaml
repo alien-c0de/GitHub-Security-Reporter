@@ -1,0 +1,70 @@
+github:
+  rate_limit_buffer: 100
+  retry_attempts: 3
+  retry_delay: 5
+  timeout: 30
+
+security:
+  severity_levels:
+    - critical
+    - high
+    - medium
+    - low
+  
+  sla_days:
+    critical: 2
+    high: 7
+    medium: 30
+    low: 90
+
+reports:
+  weekly:
+    enabled: true
+    day: monday
+    time: "09:00"
+    recipients:
+      - management@company.com
+      - security-team@company.com
+  
+  daily:
+    enabled: true
+    time: "08:00"
+    recipients:
+      - security-team@company.com
+  
+  formats:
+    - excel
+    - pdf
+  
+  sections:
+    - executive_summary
+    - trend_analysis
+    - top_risks
+    - remediation_progress
+    - repository_health
+    - recommendations
+
+storage:
+  history_retention_weeks: 52
+  cache_ttl_hours: 24
+  auto_cleanup: true
+
+notifications:
+  email:
+    enabled: true
+    on_critical: true
+    on_high: false
+  
+  slack:
+    enabled: false
+    on_critical: true
+    on_report: true
+
+compliance:
+  required_features:
+    - dependabot
+    - code_scanning
+    - secret_scanning
+    - branch_protection
+  
+  target_coverage: 0.9

@@ -1,0 +1,25 @@
+# This creates the file and adds the folders to ignore
+"
+# Ignore all .env files
+.env
+
+# Ignore all JSON files everywhere
+*.json
+
+# Ignore Excel files
+*.xlsx
+*.log
+
+# Ignore everything inside the reports folder
+data/reports/*
+data/app.log
+
+# Specifically ignore everything inside history but keep the folder structure
+data/history/*
+data/history/snapshots/*
+
+# Exception: If you want to keep a placeholder so the folder exists on GitHub
+!data/history/.gitkeep
+!data/history/snapshots/.gitkeep
+__pycache__/
+" | Out-File -FilePath .gitignore -Encoding utf8

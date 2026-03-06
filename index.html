@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Advanced Security Reporter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0d12;
+      --bg2:       #0f1318;
+      --bg3:       #141920;
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.12);
+      --green:     #3fb950;
+      --green2:    #238636;
+      --green-dim: rgba(63,185,80,0.12);
+      --orange:    #f0883e;
+      --red:       #f85149;
+      --blue:      #58a6ff;
+      --purple:    #bc8cff;
+      --text:      #e6edf3;
+      --text2:     #8b949e;
+      --text3:     #6e7681;
+      --accent:    #3fb950;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(63,185,80,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(63,185,80,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── GLOW ── */
+    .glow-orb {
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(63,185,80,0.06) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      pointer-events: none;
+      z-index: 0;
+      animation: orbDrift 20s ease-in-out infinite alternate;
+    }
+    .glow-orb2 {
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(88,166,255,0.05) 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      pointer-events: none;
+      z-index: 0;
+      animation: orbDrift2 25s ease-in-out infinite alternate;
+    }
+    @keyframes orbDrift  { to { transform: translate(80px, 60px); } }
+    @keyframes orbDrift2 { to { transform: translate(-60px, -80px); } }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px;
+      height: 60px;
+      background: rgba(10,13,18,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 15px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo svg { width: 22px; height: 22px; fill: var(--green); }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--green); }
+    .nav-cta {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--green2);
+      color: #fff;
+      text-decoration: none;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background .2s, transform .15s;
+    }
+    .nav-cta:hover { background: var(--green); transform: translateY(-1px); }
+
+    /* ── WRAPPER ── */
+    .wrap { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--green-dim);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      margin-bottom: 28px;
+      animation: fadeUp .6s ease both;
+    }
+    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.8s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(36px, 6vw, 72px);
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      margin-bottom: 24px;
+      animation: fadeUp .7s .1s ease both;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--green) 0%, #79c0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      max-width: 560px;
+      color: var(--text2);
+      font-size: 17px;
+      margin-bottom: 40px;
+      animation: fadeUp .7s .2s ease both;
+    }
+
+    .hero-btns {
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp .7s .3s ease both;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green);
+      color: #0a0d12;
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: transform .15s, box-shadow .2s;
+      box-shadow: 0 0 24px rgba(63,185,80,0.25);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 36px rgba(63,185,80,0.4); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent;
+      color: var(--text);
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      border: 1px solid var(--border2);
+      transition: border-color .2s, background .2s, transform .15s;
+    }
+    .btn-secondary:hover { border-color: var(--green); background: var(--green-dim); transform: translateY(-2px); }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: flex; gap: 0;
+      margin-top: 72px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg2);
+      animation: fadeUp .7s .4s ease both;
+    }
+    .stat {
+      flex: 1;
+      padding: 24px 32px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      color: var(--green);
+      display: block;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 500;
+    }
+
+    @keyframes fadeUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+    /* ── SECTION ── */
+    section { padding: 100px 24px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      color: var(--text2);
+      font-size: 16px;
+      max-width: 540px;
+      margin-bottom: 56px;
+    }
+
+    /* ── HOW IT WORKS ── */
+    #how { background: var(--bg2); }
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .how-card {
+      background: var(--bg2);
+      padding: 36px 28px;
+      position: relative;
+      transition: background .2s;
+    }
+    .how-card:hover { background: var(--bg3); }
+    .how-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 16px;
+      display: block;
+    }
+    .how-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .how-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .how-card p { color: var(--text2); font-size: 13.5px; }
+
+    /* ── REPORTS ── */
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .report-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .report-card:hover { border-color: var(--green); transform: translateY(-4px); }
+
+    .report-header {
+      padding: 24px 24px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .report-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .icon-daily  { background: rgba(248,81,73,0.15); }
+    .icon-weekly { background: rgba(63,185,80,0.12); }
+    .icon-org    { background: rgba(88,166,255,0.12); }
+
+    .report-header-text h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
+    .report-header-text p { color: var(--text2); font-size: 13px; }
+
+    .report-badge {
+      margin-left: auto;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+      white-space: nowrap;
+    }
+    .badge-red    { background: rgba(248,81,73,0.15); color: var(--red); }
+    .badge-green  { background: rgba(63,185,80,0.12); color: var(--green); }
+    .badge-blue   { background: rgba(88,166,255,0.12); color: var(--blue); }
+
+    .report-tabs { padding: 16px 24px 20px; }
+    .report-tabs h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text3);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .tab-list { display: flex; flex-direction: column; gap: 6px; }
+    .tab-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--bg3);
+      font-size: 13px;
+      color: var(--text2);
+      transition: background .15s, color .15s;
+    }
+    .tab-item:hover { background: rgba(63,185,80,0.08); color: var(--text); }
+    .tab-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot-red    { background: var(--red); }
+    .dot-green  { background: var(--green); }
+    .dot-orange { background: var(--orange); }
+    .dot-blue   { background: var(--blue); }
+    .dot-purple { background: var(--purple); }
+    .dot-gray   { background: var(--text3); }
+
+    /* ── SAMPLE ── */
+    #samples { background: var(--bg2); }
+    .sample-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .sample-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .sample-card:hover { border-color: rgba(88,166,255,0.4); transform: translateY(-4px); }
+    .sample-preview {
+      background: var(--bg3);
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      min-height: 140px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+
+    /* Mini report mockup */
+    .mini-report {
+      width: 100%; max-width: 240px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mini-report-bar {
+      background: var(--bg3);
+      padding: 8px 12px;
+      display: flex; align-items: center; gap: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mini-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .mini-tab-row {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .mini-tab {
+      padding: 4px 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--text3);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .mini-tab.active { background: var(--green-dim); color: var(--green); }
+    .mini-body { padding: 10px 12px; }
+    .mini-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 9px;
+      color: var(--text2);
+    }
+    .mini-row:last-child { border-bottom: none; }
+    .mini-val { font-family: 'Space Mono', monospace; }
+    .mini-crit { color: var(--red); }
+    .mini-high { color: var(--orange); }
+    .mini-med  { color: #d29922; }
+    .mini-ok   { color: var(--green); }
+
+    .sample-info { padding: 20px; }
+    .sample-info h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .sample-info p { color: var(--text2); font-size: 13px; margin-bottom: 16px; }
+    .sample-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tag {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      color: var(--text3);
+    }
+    .sample-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: gap .2s;
+    }
+    .sample-link:hover { gap: 10px; }
+
+    .sample-note {
+      margin-top: 32px;
+      padding: 16px 20px;
+      background: rgba(88,166,255,0.06);
+      border: 1px solid rgba(88,166,255,0.2);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text2);
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .sample-note span { color: var(--blue); font-size: 16px; }
+
+    /* ── QUICK START ── */
+    .quickstart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 760px) { .quickstart-grid { grid-template-columns: 1fr; } }
+
+    .qs-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .qs-block-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .qs-block-header h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .qs-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--green-dim);
+      border: 1px solid rgba(63,185,80,0.3);
+      color: var(--green);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    pre {
+      padding: 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      overflow-x: auto;
+      line-height: 1.8;
+    }
+    .cmd-comment { color: var(--text3); }
+    .cmd-dollar  { color: var(--green); }
+    .cmd-cmd     { color: var(--text); }
+    .cmd-flag    { color: var(--blue); }
+    .cmd-val     { color: var(--orange); }
+
+    .env-block { padding: 20px; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 2; }
+    .env-comment { color: var(--text3); }
+    .env-key     { color: var(--blue); }
+    .env-eq      { color: var(--text3); }
+    .env-val     { color: var(--orange); }
+    .env-section { margin-top: 14px; }
+
+    /* ── WHY ── */
+    #why { background: var(--bg2); }
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .why-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 24px;
+      transition: border-color .2s, transform .2s;
+    }
+    .why-card:hover { border-color: rgba(63,185,80,0.35); transform: translateY(-3px); }
+    .why-icon { font-size: 28px; margin-bottom: 14px; }
+    .why-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+    .why-card p { color: var(--text2); font-size: 13.5px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .footer-inner { max-width: 700px; margin: 0 auto; }
+    .footer-logo {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .footer-logo svg { width: 20px; height: 20px; fill: var(--green); }
+    .footer-links {
+      display: flex; gap: 24px; justify-content: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--green); }
+    .footer-copy { color: var(--text3); font-size: 12px; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .stats-row { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+    }
+
+    /* ── REVEAL ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="glow-orb"></div>
+<div class="glow-orb2"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+    GitHub Security Reporter
+  </a>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#reports">Reports</a>
+    <a href="#samples">Samples</a>
+    <a href="#quickstart">Quick Start</a>
+  </div>
+  <a href="https://github.com/alien-c0de/GitHub-Security-Reporter" class="nav-cta">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+    View on GitHub
+  </a>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span></span> Automated · Excel Reports · GitHub Actions
+    </div>
+    <h1>🔭 GitHub Advanced<br/><em>Security Reporter</em></h1>
+    <p class="hero-sub">
+      Automated security intelligence across your entire GitHub organization —
+      Daily alerts, Weekly posture reports, and full Enterprise inventory, delivered as polished Excel workbooks.
+    </p>
+    <div class="hero-btns">
+      <a href="https://github.com/alien-c0de/GitHub-Security-Reporter" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        ⭐ View on GitHub
+      </a>
+      <a href="#samples" class="btn-secondary">📊 Sample Reports</a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><span class="stat-num">3</span><span class="stat-label">Report Types</span></div>
+      <div class="stat"><span class="stat-num">18+</span><span class="stat-label">Excel Tabs</span></div>
+      <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Open Source</span></div>
+      <div class="stat"><span class="stat-num">0</span><span class="stat-label">Data Collection</span></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="section-inner">
+      <div class="section-tag reveal">How It Works</div>
+      <h2 class="section-title reveal">From GitHub API to<br/>your inbox in minutes</h2>
+      <p class="section-sub reveal">Async parallel processing across hundreds of repositories with zero infrastructure required beyond GitHub Actions.</p>
+      <div class="how-grid reveal">
+        <div class="how-card">
+          <span class="how-num">01</span>
+          <span class="how-icon">🔑</span>
+          <h3>Authenticate</h3>
+          <p>Configure your GitHub PAT with <code>repo</code>, <code>security_events</code>, and <code>read:org</code> scopes.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-num">02</span>
+          <span class="how-icon">⚡</span>
+          <h3>Collect</h3>
+          <p>Async parallel calls to GitHub GraphQL & REST APIs aggregate Dependabot, Code Scanning, Secret Scanning, and Supply Chain data.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-num">03</span>
+          <span class="how-icon">📊</span>
+          <h3>Analyze</h3>
+          <p>Risk scoring, trend analysis, and compliance checks surface what matters. Vulnerabilities are ranked by severity, age, and impact.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-num">04</span>
+          <span class="how-icon">📋</span>
+          <h3>Report</h3>
+          <p>Multi-tab Excel workbooks are generated automatically — Daily, Weekly, or on-demand Org Inventory — and emailed to your team.</p>
+        </div>
+        <div class="how-card">
+          <span class="how-num">05</span>
+          <span class="how-icon">🔄</span>
+          <h3>Automate</h3>
+          <p>GitHub Actions workflows run on schedule with no additional infrastructure. Zero-maintenance once configured.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="reports">
+    <div class="section-inner">
+      <div class="section-tag reveal">Report Types</div>
+      <h2 class="section-title reveal">Three reports.<br/>Every angle covered.</h2>
+      <p class="section-sub reveal">Each report is a multi-tab Excel workbook tailored to a different cadence and audience.</p>
+      <div class="reports-grid">
+
+        <!-- DAILY -->
+        <div class="report-card reveal">
+          <div class="report-header">
+            <div class="report-icon icon-daily">🚨</div>
+            <div class="report-header-text">
+              <h3>Daily Security Report</h3>
+              <p>New critical alerts from the last 24 hours</p>
+            </div>
+            <span class="report-badge badge-red">Daily</span>
+          </div>
+          <div class="report-tabs">
+            <h4>Excel Tabs</h4>
+            <div class="tab-list">
+              <div class="tab-item"><span class="tab-dot dot-red"></span>Executive Summary — Alert counts by severity & type</div>
+              <div class="tab-item"><span class="tab-dot dot-orange"></span>Critical Items — Filterable list of all new critical alerts</div>
+              <div class="tab-item"><span class="tab-dot dot-purple"></span>Exposed Secrets — Open secrets with type & exposure age</div>
+              <div class="tab-item"><span class="tab-dot dot-blue"></span>Pivot Analysis — Alert count grouped by repository</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WEEKLY -->
+        <div class="report-card reveal">
+          <div class="report-header">
+            <div class="report-icon icon-weekly">📊</div>
+            <div class="report-header-text">
+              <h3>Weekly Security Report</h3>
+              <p>Full posture, trends & remediation guidance</p>
+            </div>
+            <span class="report-badge badge-green">Weekly</span>
+          </div>
+          <div class="report-tabs">
+            <h4>Excel Tabs</h4>
+            <div class="tab-list">
+              <div class="tab-item"><span class="tab-dot dot-green"></span>Executive Summary — Weekly KPIs & SLA timelines</div>
+              <div class="tab-item"><span class="tab-dot dot-blue"></span>Analysis & Progress — Week-over-week trend comparison</div>
+              <div class="tab-item"><span class="tab-dot dot-red"></span>Top Risks — Highest-risk open vulnerabilities + CVEs</div>
+              <div class="tab-item"><span class="tab-dot dot-orange"></span>Repository Health — Compliance % per repo</div>
+              <div class="tab-item"><span class="tab-dot dot-purple"></span>Recommendations — Prioritized SLA-driven actions</div>
+              <div class="tab-item"><span class="tab-dot dot-gray"></span>Repository Risk Pivot — Severity breakdown per repo</div>
+              <div class="tab-item"><span class="tab-dot dot-orange"></span>Dependabot Details — Full dependency alert export</div>
+              <div class="tab-item"><span class="tab-dot dot-blue"></span>Code Scanning Details — All CodeQL & tool findings</div>
+              <div class="tab-item"><span class="tab-dot dot-red"></span>Secret Scanning Details — All exposed secrets</div>
+              <div class="tab-item"><span class="tab-dot dot-green"></span>Supply Chain — Dependency review per repository</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORG -->
+        <div class="report-card reveal">
+          <div class="report-header">
+            <div class="report-icon icon-org">🏢</div>
+            <div class="report-header-text">
+              <h3>Organization Inventory</h3>
+              <p>Enterprise-wide snapshot across all orgs</p>
+            </div>
+            <span class="report-badge badge-blue">On-demand</span>
+          </div>
+          <div class="report-tabs">
+            <h4>Excel Tabs</h4>
+            <div class="tab-list">
+              <div class="tab-item"><span class="tab-dot dot-blue"></span>Executive Summary — Org totals, visibility & alert summary</div>
+              <div class="tab-item"><span class="tab-dot dot-green"></span>All Repositories — 23-attribute inventory of every repo</div>
+              <div class="tab-item"><span class="tab-dot dot-orange"></span>Repository Health — Security feature adoption audit</div>
+              <div class="tab-item"><span class="tab-dot dot-red"></span>Organization Risk Pivot — Cross-org vulnerability concentration</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SAMPLE REPORTS -->
+  <section id="samples">
+    <div class="section-inner">
+      <div class="section-tag reveal">Sample Reports</div>
+      <h2 class="section-title reveal">See what gets generated</h2>
+      <p class="section-sub reveal">Explore anonymized sample Excel reports produced by GitHub Security Reporter. Real structure, real tabs, demo data.</p>
+
+      <div class="sample-grid">
+
+        <!-- Daily Sample -->
+        <div class="sample-card reveal">
+          <div class="sample-preview">
+            <div class="mini-report">
+              <div class="mini-report-bar">
+                <div class="mini-dot" style="background:#f85149"></div>
+                <div class="mini-dot" style="background:#f0883e"></div>
+                <div class="mini-dot" style="background:#3fb950"></div>
+                <span style="font-family:'Space Mono',monospace;font-size:9px;color:#6e7681;margin-left:4px;">Daily_Report_20260301.xlsx</span>
+              </div>
+              <div class="mini-tab-row">
+                <div class="mini-tab active">Exec Summary</div>
+                <div class="mini-tab">Critical Items</div>
+                <div class="mini-tab">Secrets</div>
+                <div class="mini-tab">Pivot</div>
+              </div>
+              <div class="mini-body">
+                <div class="mini-row"><span>Total New Alerts</span><span class="mini-val mini-crit">718</span></div>
+                <div class="mini-row"><span>Critical</span><span class="mini-val mini-crit">718</span></div>
+                <div class="mini-row"><span>Exposed Secrets</span><span class="mini-val mini-high">26</span></div>
+                <div class="mini-row"><span>Dependency</span><span class="mini-val mini-high">672</span></div>
+                <div class="mini-row"><span>Code Scanning</span><span class="mini-val mini-med">46</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sample-info">
+            <h3>Daily Security Report</h3>
+            <p>Critical alerts from the last 24 hours across all monitored repositories. Includes exposed secrets with age tracking.</p>
+            <div class="sample-tags">
+              <span class="tag">4 Tabs</span>
+              <span class="tag">Critical & High</span>
+              <span class="tag">Secret Scanning</span>
+            </div>
+            <a href="./data/reports/Sample_Daily_Security_Report.xlsx" class="sample-link">Download Sample →</a>
+          </div>
+        </div>
+
+        <!-- Weekly Sample -->
+        <div class="sample-card reveal">
+          <div class="sample-preview">
+            <div class="mini-report">
+              <div class="mini-report-bar">
+                <div class="mini-dot" style="background:#f85149"></div>
+                <div class="mini-dot" style="background:#f0883e"></div>
+                <div class="mini-dot" style="background:#3fb950"></div>
+                <span style="font-family:'Space Mono',monospace;font-size:9px;color:#6e7681;margin-left:4px;">Weekly_Report_W09.xlsx</span>
+              </div>
+              <div class="mini-tab-row">
+                <div class="mini-tab active">Exec Summary</div>
+                <div class="mini-tab">Top Risks</div>
+                <div class="mini-tab">Health</div>
+                <div class="mini-tab">+7</div>
+              </div>
+              <div class="mini-body">
+                <div class="mini-row"><span>Total Open</span><span class="mini-val mini-high">1,046</span></div>
+                <div class="mini-row"><span>Critical</span><span class="mini-val mini-crit">46</span></div>
+                <div class="mini-row"><span>High</span><span class="mini-val mini-high">348</span></div>
+                <div class="mini-row"><span>Secrets</span><span class="mini-val mini-crit">26</span></div>
+                <div class="mini-row"><span>Repos Scanned</span><span class="mini-val mini-ok">518</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sample-info">
+            <h3>Weekly Security Report</h3>
+            <p>Full security posture with trend analysis, top risks, repository health audit, and prioritized remediation recommendations.</p>
+            <div class="sample-tags">
+              <span class="tag">10 Tabs</span>
+              <span class="tag">Trend Analysis</span>
+              <span class="tag">CVE Details</span>
+            </div>
+            <a href="./data/reports/Sample_Weekly_Security_Report.xlsx" class="sample-link">Download Sample →</a>
+          </div>
+        </div>
+
+        <!-- Org Sample -->
+        <div class="sample-card reveal">
+          <div class="sample-preview">
+            <div class="mini-report">
+              <div class="mini-report-bar">
+                <div class="mini-dot" style="background:#f85149"></div>
+                <div class="mini-dot" style="background:#f0883e"></div>
+                <div class="mini-dot" style="background:#3fb950"></div>
+                <span style="font-family:'Space Mono',monospace;font-size:9px;color:#6e7681;margin-left:4px;">Enterprise_Inventory.xlsx</span>
+              </div>
+              <div class="mini-tab-row">
+                <div class="mini-tab active">Exec Summary</div>
+                <div class="mini-tab">All Repos</div>
+                <div class="mini-tab">Health</div>
+                <div class="mini-tab">Risk</div>
+              </div>
+              <div class="mini-body">
+                <div class="mini-row"><span>Organizations</span><span class="mini-val mini-ok">47</span></div>
+                <div class="mini-row"><span>Total Repos</span><span class="mini-val mini-ok">942</span></div>
+                <div class="mini-row"><span>Total Alerts</span><span class="mini-val mini-crit">11,563</span></div>
+                <div class="mini-row"><span>Dependabot</span><span class="mini-val mini-high">9,607</span></div>
+                <div class="mini-row"><span>Secrets</span><span class="mini-val mini-crit">49</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sample-info">
+            <h3>Organization Inventory</h3>
+            <p>Complete enterprise inventory across 47 organizations and 942 repositories, with cross-org risk concentration analysis.</p>
+            <div class="sample-tags">
+              <span class="tag">4 Tabs</span>
+              <span class="tag">47 Orgs</span>
+              <span class="tag">942 Repos</span>
+            </div>
+            <a href="./data/reports/Sample_Enterprise_Repository_Inventory.xlsx" class="sample-link">Download Sample →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sample-note reveal">
+        <span>💡</span>
+        <span>Sample reports contain fully anonymized demo data — real report structure, real tab layouts, no actual organization or repository information.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section id="quickstart">
+    <div class="section-inner">
+      <div class="section-tag reveal">Quick Start</div>
+      <h2 class="section-title reveal">Up and running<br/>in three steps</h2>
+      <p class="section-sub reveal">Clone, configure, and generate your first report. GitHub Actions handles everything after that.</p>
+
+      <div class="quickstart-grid">
+        <div class="qs-block reveal">
+          <div class="qs-block-header">
+            <div class="qs-num">1</div>
+            <h3>Install & Run</h3>
+          </div>
+          <pre><span class="cmd-comment"># Clone and install</span>
+<span class="cmd-dollar">$</span> <span class="cmd-cmd">git clone</span> https://github.com/alien-c0de/
+    github-security-reporter.git
+<span class="cmd-dollar">$</span> <span class="cmd-cmd">pip install</span> <span class="cmd-flag">-r</span> requirements.txt
+
+<span class="cmd-comment"># Run reports</span>
+<span class="cmd-dollar">$</span> <span class="cmd-cmd">python</span> main.py <span class="cmd-val">daily</span>
+<span class="cmd-dollar">$</span> <span class="cmd-cmd">python</span> main.py <span class="cmd-val">weekly</span>
+<span class="cmd-dollar">$</span> <span class="cmd-cmd">python</span> main.py <span class="cmd-val">orgdata</span></pre>
+        </div>
+
+        <div class="qs-block reveal">
+          <div class="qs-block-header">
+            <div class="qs-num">2</div>
+            <h3>Configure .env</h3>
+          </div>
+          <div class="env-block">
+            <div class="env-comment"># GitHub (Required)</div>
+            <div><span class="env-key">GITHUB_TOKEN</span><span class="env-eq">=</span><span class="env-val">ghp_xxxxxxxxxxxx</span></div>
+            <div><span class="env-key">GITHUB_ORG</span><span class="env-eq">=</span><span class="env-val">your-org-name</span></div>
+            <div><span class="env-key">GITHUB_ENTERPRISE_URL</span><span class="env-eq">=</span><span class="env-val">your-ent-url</span></div>
+            <div class="env-section env-comment"># Branding</div>
+            <div><span class="env-key">COMPANY_NAME</span><span class="env-eq">=</span><span class="env-val">Your Company</span></div>
+            <div><span class="env-key">SUPPORT_EMAIL</span><span class="env-eq">=</span><span class="env-val">team@company.com</span></div>
+            <div class="env-section env-comment"># Email (Optional)</div>
+            <div><span class="env-key">EMAIL_TO</span><span class="env-eq">=</span><span class="env-val">security@company.com</span></div>
+          </div>
+        </div>
+
+        <div class="qs-block reveal" style="grid-column: 1 / -1;">
+          <div class="qs-block-header">
+            <div class="qs-num">3</div>
+            <h3>Automate with GitHub Actions — add secrets and enable workflows</h3>
+          </div>
+          <pre><span class="cmd-comment"># Workflows in .github/workflows/</span>
+<span class="cmd-comment"># daily-summary.yml   → runs every day at 07:00 UTC</span>
+<span class="cmd-comment"># weekly-report.yml   → runs every Monday at 08:00 UTC</span>
+
+<span class="cmd-comment"># Required repo secrets:</span>
+<span class="cmd-val">ORG_SECURITY_TOKEN</span>   <span class="cmd-comment"># PAT with security_events + read:org</span>
+<span class="cmd-val">EMAIL_USERNAME</span>        <span class="cmd-comment"># SMTP username</span>
+<span class="cmd-val">EMAIL_PASSWORD</span>        <span class="cmd-comment"># SMTP app password</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section id="why">
+    <div class="section-inner">
+      <div class="section-tag reveal">Why This Tool</div>
+      <h2 class="section-title reveal">Security visibility<br/>without the overhead</h2>
+      <p class="section-sub reveal">Most teams manually export GitHub security data, paste it into spreadsheets, and email it around. This tool eliminates all of that.</p>
+      <div class="why-grid">
+        <div class="why-card reveal">
+          <div class="why-icon">⚡</div>
+          <h3>Async at Scale</h3>
+          <p>Parallel API collection across hundreds of repositories and dozens of organizations completes in minutes, not hours.</p>
+        </div>
+        <div class="why-card reveal">
+          <div class="why-icon">🎯</div>
+          <h3>Risk-Prioritized</h3>
+          <p>Automated risk scoring ranks vulnerabilities by severity, age, and repository impact — so teams know exactly where to focus.</p>
+        </div>
+        <div class="why-card reveal">
+          <div class="why-icon">📧</div>
+          <h3>Fully Automated</h3>
+          <p>GitHub Actions delivers reports to stakeholders on schedule. No dashboards to check, no manual exports, no spreadsheet wrangling.</p>
+        </div>
+        <div class="why-card reveal">
+          <div class="why-icon">🔒</div>
+          <h3>Zero Data Collection</h3>
+          <p>All processing runs inside your own GitHub Actions environment. Your security data never leaves your infrastructure.</p>
+        </div>
+        <div class="why-card reveal">
+          <div class="why-icon">📋</div>
+          <h3>Audit-Ready</h3>
+          <p>Timestamped, versioned Excel reports provide a complete paper trail for compliance evidence and security review cycles.</p>
+        </div>
+        <div class="why-card reveal">
+          <div class="why-icon">🛠️</div>
+          <h3>Open Source</h3>
+          <p>MIT licensed and fully extensible. Add new collectors, customize report layouts, or extend the risk scoring model for your org.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- .wrap -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+      GitHub Security Reporter
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/alien-c0de/github-security-reporter">GitHub</a>
+      <a href="https://github.com/alien-c0de/github-security-reporter/blob/main/README.md">Documentation</a>
+      <a href="#samples">Sample Reports</a>
+      <a href="https://github.com/alien-c0de/github-security-reporter/issues">Issues</a>
+      <a href="https://github.com/alien-c0de/github-security-reporter/blob/main/LICENSE">MIT License</a>
+    </div>
+    <div class="footer-copy">
+      Built with ❤️ by <a href="https://github.com/alien-c0de" style="color:var(--green);text-decoration:none;">alien-c0de</a> &nbsp;·&nbsp;
+      © 2026 GitHub Security Reporter. Open Source under MIT License.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        // Stagger siblings
+        const siblings = [...e.target.parentElement.querySelectorAll('.reveal')];
+        const idx = siblings.indexOf(e.target);
+        setTimeout(() => e.target.classList.add('visible'), idx * 80);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(r => io.observe(r));
+
+  // Animate stat numbers on load
+  function animateCount(el, target, duration=1200) {
+    const start = performance.now();
+    const isFloat = String(target).includes('.');
+    const update = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1-t, 3);
+      const val = target * ease;
+      el.textContent = isFloat ? val.toFixed(2) : Math.round(val).toLocaleString();
+      if (t < 1) requestAnimationFrame(update);
+      else el.textContent = isFloat ? target : target.toLocaleString();
+    };
+    requestAnimationFrame(update);
+  }
+
+  const statNums = document.querySelectorAll('.stat-num');
+  const statVals = [3, 18, 100, 0];
+  const statSuffixes = ['', '+', '%', ''];
+  setTimeout(() => {
+    statNums.forEach((el, i) => {
+      const orig = el.textContent;
+      animateCount(el, statVals[i]);
+      setTimeout(() => { el.textContent = orig; }, 1300);
+    });
+  }, 500);
+</script>
+
+</body>
+</html>
